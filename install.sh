@@ -1,13 +1,13 @@
 #!/bin/bash
-# Builds MN Route as a real .app bundle (proper name/icon instead of a
+# Builds MN-routes as a real .app bundle (proper name/icon instead of a
 # generic Python process), installs it to ~/Applications, and optionally
 # sets it up to start automatically at login via a LaunchAgent.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_NAME="MN Route"
-PLIST_LABEL="com.mnroute.app"
+APP_NAME="MN-routes"
+PLIST_LABEL="com.mnroutes.app"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 INSTALL_DIR="$HOME/Applications"
 APP_PATH="$INSTALL_DIR/${APP_NAME}.app"
@@ -64,9 +64,9 @@ case "$REPLY" in
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/mn-route.out.log</string>
+    <string>/tmp/mn-routes.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/mn-route.err.log</string>
+    <string>/tmp/mn-routes.err.log</string>
 </dict>
 </plist>
 PLIST

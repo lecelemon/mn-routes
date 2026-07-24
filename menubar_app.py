@@ -68,7 +68,7 @@ class RouteEntry:
 
 class NetBirdRouteFixApp(rumps.App):
     def __init__(self):
-        super().__init__("MN Route", title="❓ …")
+        super().__init__("MN-routes", title="❓ …")
         self.cfg = rm.load_config()
         self.state = rm.load_state()
 

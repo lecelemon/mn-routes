@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-APP_NAME="MN Route"
-PLIST_LABEL="com.mnroute.app"
+APP_NAME="MN-routes"
+PLIST_LABEL="com.mnroutes.app"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
 APP_PATH="$HOME/Applications/${APP_NAME}.app"
 

@@ -9,8 +9,8 @@ bundle identity). Run via install.sh, or directly:
 
 from setuptools import setup
 
-APP_NAME = "MN Route"
-BUNDLE_ID = "com.mnroute.app"
+APP_NAME = "MN-routes"
+BUNDLE_ID = "com.mnroutes.app"
 
 setup(
     app=["menubar_app.py"],

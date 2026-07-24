@@ -1,4 +1,4 @@
-# MN Route
+# MN-routes
 
 A macOS menu bar app that fixes a common NetBird routing conflict: NetBird
 pushes a route for a subnet through its VPN tunnel, even on networks where
@@ -21,13 +21,13 @@ Supports any number of subnets, each switched independently.
 ## Install
 
 ```bash
-git clone https://github.com/lecelemon/mn-route.git
-cd mn-route
+git clone https://github.com/lecelemon/mn-routes.git
+cd mn-routes
 chmod +x install.sh
 ./install.sh
 ```
 
-`install.sh` builds a real `MN Route.app`, installs it to `~/Applications`,
+`install.sh` builds a real `MN-routes.app`, installs it to `~/Applications`,
 and optionally sets up a LaunchAgent so it starts automatically at login.
 Building it locally (via [py2app](https://py2app.readthedocs.io/)) is what
 gives it a proper name/icon in Activity Monitor, alerts, and the menu bar,
