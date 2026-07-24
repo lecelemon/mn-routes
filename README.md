@@ -40,7 +40,7 @@ and optionally sets up a LaunchAgent so it starts automatically at login.
 
 The first time it runs without passwordless `sudo` already configured for
 `/sbin/route`, it shows a native macOS admin-password prompt (once) to set
-that up — needed so the app can switch routes without asking for yours
+that up — needed so the app can switch routes without asking for your
 password every time.
 
 ## Configure
