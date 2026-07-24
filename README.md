@@ -21,8 +21,8 @@ Supports any number of subnets, each switched independently.
 ## Install
 
 ```bash
-git clone https://github.com/lecelemon/netbird-route-fix.git
-cd netbird-route-fix
+git clone https://github.com/lecelemon/mn-route.git
+cd mn-route
 chmod +x install.sh
 ./install.sh
 ```
