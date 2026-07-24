@@ -1,11 +1,11 @@
 # MN-routes
 
-A macOS menu bar app that fixes a common NetBird routing conflict: NetBird
-pushes a route for a subnet through its VPN tunnel, even on networks where
-that same subnet is already directly reachable (e.g. via inter-VLAN
-routing). This app detects which situation you're in and automatically
-points the route at whichever path is actually faster — with a menu bar
-icon and manual override if you'd rather control it yourself.
+A macOS menu bar app that fixes a common VPN routing conflict: some VPN
+clients push a route for a subnet through their tunnel, even on networks
+where that same subnet is already directly reachable. This app detects
+which situation you're in and automatically points the route at whichever
+path is actually faster — with a menu bar icon and manual override if
+you'd rather control it yourself.
 
 Supports any number of subnets, each switched independently.
 
@@ -20,8 +20,7 @@ Supports any number of subnets, each switched independently.
   macOS versions are likely fine too, but untested. It should also work
   with any other VPN client built on WireGuard/`utun` interfaces (e.g.
   Tailscale, plain WireGuard) since the switching logic only looks at
-  the OS routing table and interface names, not anything NetBird-specific
-  — but that combination hasn't actually been tested.
+  the OS routing table and interface names, not anything NetBird-specific.
 
 ## Install
 
@@ -45,7 +44,7 @@ password every time.
 
 ## Configure
 
-Edit `~/.netbird-route-fix/config.json` (created automatically on first
+Edit `~/.mn-routes/config.json` (created automatically on first
 run — see [config.example.json](config.example.json) for the shape):
 
 ```json
@@ -78,7 +77,7 @@ Each configured subnet gets its own line in the menu bar dropdown:
 
 - **Auto (recommended)** — switches automatically based on live reachability.
 - **Force Direct** — always route via the local physical interface.
-- **Force via NetBird VPN** — always route via the NetBird tunnel.
+- **Force via Tunnel Interface** — always route via the VPN tunnel.
 
 Menu bar icons: 🟢 direct · 🔒 VPN · 🚫 no route installed · ⚠️ error
 (hover the icon for details).

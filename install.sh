@@ -93,4 +93,4 @@ esac
 
 echo
 echo "Done. The first launch shows a one-time macOS admin-password prompt to allow route switching."
-echo "Edit ~/.netbird-route-fix/config.json (created on first run) to add your own subnet(s)."
+echo "Edit ~/.mn-routes/config.json (created on first run) to add your own subnet(s)."

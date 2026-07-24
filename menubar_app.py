@@ -1,13 +1,13 @@
 """
-NetBird Route Fix — a macOS menu bar app that keeps traffic to one or
-more configured subnets on the fastest available path.
+MN-routes — a macOS menu bar app that keeps traffic to one or more
+configured subnets on the fastest available path.
 
-Problem it solves: NetBird pushes a route for a subnet through its
+Problem it solves: a VPN client pushes a route for a subnet through its
 tunnel even when you're on a network that already has direct
 (inter-VLAN) routing to that same subnet. This app detects which
 situation you're actually in, independently for each subnet listed in
-~/.netbird-route-fix/config.json, and repoints the macOS routing table
-to match — automatically, or on manual command from the menu bar.
+~/.mn-routes/config.json, and repoints the macOS routing table to
+match — automatically, or on manual command from the menu bar.
 """
 
 import rumps
@@ -55,7 +55,7 @@ class RouteEntry:
         self.direct_item = rumps.MenuItem(
             "Force Direct (bypass VPN)", callback=lambda s: app.set_mode(subnet, "direct"))
         self.vpn_item = rumps.MenuItem(
-            "Force via NetBird VPN", callback=lambda s: app.set_mode(subnet, "vpn"))
+            "Force via Tunnel Interface", callback=lambda s: app.set_mode(subnet, "vpn"))
 
     def sync_checkmarks(self):
         self.auto_item.state = self.mode == "auto"
@@ -66,7 +66,7 @@ class RouteEntry:
         return [self.status_item, self.auto_item, self.direct_item, self.vpn_item]
 
 
-class NetBirdRouteFixApp(rumps.App):
+class MNRoutesApp(rumps.App):
     def __init__(self):
         super().__init__("MN-routes", title="❓ …")
         self.cfg = rm.load_config()
@@ -167,10 +167,10 @@ class NetBirdRouteFixApp(rumps.App):
             route = rm.get_current_route(subnet)
 
             if route and route["netif"].startswith(("utun", "wt")):
-                if not rstate.get("netbird_iface"):
-                    rstate["netbird_iface"] = route["netif"]
+                if not rstate.get("vpn_iface"):
+                    rstate["vpn_iface"] = route["netif"]
 
-            vpn_iface = rstate.get("netbird_iface")
+            vpn_iface = rstate.get("vpn_iface")
             if route is None:
                 entry.current_path = "absent"
             elif route["netif"].startswith(("utun", "wt")):
@@ -203,7 +203,7 @@ class NetBirdRouteFixApp(rumps.App):
         else:
             if not vpn_iface:
                 raise RuntimeError(
-                    "NetBird tunnel interface unknown — connect while off-site once so it can be learned"
+                    "VPN tunnel interface unknown — connect via VPN while off-site once so it can be learned"
                 )
             rm.apply_vpn_route(subnet, vpn_iface)
             entry.current_path = "vpn"
@@ -235,4 +235,4 @@ class NetBirdRouteFixApp(rumps.App):
 
 
 if __name__ == "__main__":
-    NetBirdRouteFixApp().run()
+    MNRoutesApp().run()

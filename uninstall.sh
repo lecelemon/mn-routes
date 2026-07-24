@@ -1,7 +1,7 @@
 #!/bin/bash
 # Stops and removes the LaunchAgent and installed app created by install.sh.
-# Leaves ~/.netbird-route-fix (config/state) and the sudoers rule in
-# place; remove those yourself if you want a fully clean uninstall.
+# Leaves ~/.mn-routes (config/state) and the sudoers rule in place;
+# remove those yourself if you want a fully clean uninstall.
 
 set -euo pipefail
 
@@ -17,5 +17,5 @@ rm -rf "$APP_PATH"
 echo "Stopped and removed the LaunchAgent and ${APP_NAME}.app."
 echo
 echo "Still on disk (remove manually if you want a full clean uninstall):"
-echo "  ~/.netbird-route-fix/          (config + learned state)"
-echo "  /etc/sudoers.d/netbird-route-fix  (passwordless sudo rule for /sbin/route)"
+echo "  ~/.mn-routes/                  (config + learned state)"
+echo "  /etc/sudoers.d/mn-routes       (passwordless sudo rule for /sbin/route)"

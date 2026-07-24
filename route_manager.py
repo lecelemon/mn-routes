@@ -1,8 +1,8 @@
 """
 Core logic for detecting whether a given subnet is directly reachable
-(inter-VLAN, on-site) versus only reachable through the NetBird VPN
-tunnel, and for switching the macOS routing table between the two.
-Supports any number of independently-configured subnets ("routes").
+(inter-VLAN, on-site) versus only reachable through a VPN tunnel, and
+for switching the macOS routing table between the two. Supports any
+number of independently-configured subnets ("routes").
 
 Nothing here needs elevated privileges except the `route add`/`route
 delete` calls in apply_direct_route()/apply_vpn_route(), which run
@@ -22,10 +22,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-APP_DIR = Path.home() / ".netbird-route-fix"
+APP_DIR = Path.home() / ".mn-routes"
+_LEGACY_APP_DIR = Path.home() / ".netbird-route-fix"
 CONFIG_PATH = APP_DIR / "config.json"
 STATE_PATH = APP_DIR / "state.json"
-SUDOERS_FILE = Path("/etc/sudoers.d/netbird-route-fix")
+SUDOERS_FILE = Path("/etc/sudoers.d/mn-routes")
+_LEGACY_SUDOERS_FILE = Path("/etc/sudoers.d/netbird-route-fix")
 
 DEFAULT_CONFIG = {
     "poll_interval_seconds": 10,
@@ -47,6 +49,14 @@ IFACE_EXCLUDE_PREFIXES = (
 )
 
 
+def _migrate_legacy_app_dir():
+    """Config/state used to live under ~/.netbird-route-fix; move it to
+    the current location in place, once, if found."""
+    if APP_DIR.exists() or not _LEGACY_APP_DIR.exists():
+        return
+    _LEGACY_APP_DIR.rename(APP_DIR)
+
+
 def _migrate_legacy_config(on_disk):
     """Older configs had one top-level subnet/probe_ip instead of a
     routes list; fold them into a single-entry routes list in place."""
@@ -63,6 +73,7 @@ def _migrate_legacy_config(on_disk):
 
 
 def load_config():
+    _migrate_legacy_app_dir()
     APP_DIR.mkdir(parents=True, exist_ok=True)
     if not CONFIG_PATH.exists():
         CONFIG_PATH.write_text(json.dumps(DEFAULT_CONFIG, indent=2))
@@ -80,6 +91,7 @@ def load_config():
 
 
 def load_state():
+    _migrate_legacy_app_dir()
     if STATE_PATH.exists():
         try:
             return json.loads(STATE_PATH.read_text())
@@ -94,15 +106,18 @@ def save_state(state):
 
 
 def get_route_state(state, subnet):
-    """Per-subnet state (mode, learned NetBird tunnel interface), migrating
-    the old single-route {mode, netbird_iface} shape in place if found."""
+    """Per-subnet state (mode, learned VPN tunnel interface), migrating
+    older on-disk shapes in place if found."""
     routes = state.setdefault("routes", {})
-    if subnet not in routes and ("mode" in state or "netbird_iface" in state):
+    if subnet not in routes and ("mode" in state or "netbird_iface" in state or "vpn_iface" in state):
         routes[subnet] = {
             "mode": state.pop("mode", "auto"),
-            "netbird_iface": state.pop("netbird_iface", None),
+            "vpn_iface": state.pop("vpn_iface", None) or state.pop("netbird_iface", None),
         }
-    return routes.setdefault(subnet, {"mode": "auto", "netbird_iface": None})
+    route = routes.setdefault(subnet, {"mode": "auto", "vpn_iface": None})
+    if "vpn_iface" not in route:
+        route["vpn_iface"] = route.pop("netbird_iface", None)
+    return route
 
 
 def _run(cmd, timeout=5):
@@ -213,7 +228,7 @@ def get_gateway_for_iface(iface):
 
 def apply_direct_route(subnet, iface):
     """Point `subnet` at the given physical interface's own gateway,
-    overriding whatever NetBird currently has installed."""
+    overriding whatever the VPN currently has installed."""
     gw = get_gateway_for_iface(iface)
     if not gw:
         raise RuntimeError(f"No DHCP-provided gateway found for {iface}")
@@ -225,7 +240,7 @@ def apply_direct_route(subnet, iface):
 
 
 def apply_vpn_route(subnet, vpn_iface):
-    """Restore `subnet` to route through NetBird's tunnel interface."""
+    """Restore `subnet` to route through the VPN's tunnel interface."""
     _run(["sudo", "-n", "/sbin/route", "-n", "delete", "-net", subnet])
     result = _run(["sudo", "-n", "/sbin/route", "-n", "add", "-net", subnet, "-interface", vpn_iface])
     if result.returncode != 0:
@@ -245,23 +260,24 @@ def install_blanket_sudoers_rule():
     terminal prompt). Returns (ok: bool, message: str)."""
     user = getpass.getuser()
     content = (
-        "# Managed by netbird-route-fix — do not edit by hand.\n"
+        "# Managed by mn-routes — do not edit by hand.\n"
         "# Regenerate via the app's automatic setup, or setup_sudoers.sh.\n"
         f"{user} ALL=(root) NOPASSWD: /sbin/route\n"
     )
 
-    fd, tmp_path = tempfile.mkstemp(prefix="netbird-route-fix-")
+    fd, tmp_path = tempfile.mkstemp(prefix="mn-routes-")
     try:
         with open(fd, "w") as f:
             f.write(content)
 
         shell_cmd = (
             f"/usr/sbin/visudo -cf {shlex.quote(tmp_path)} && "
-            f"/usr/bin/install -m 0440 -o root -g wheel {shlex.quote(tmp_path)} {shlex.quote(str(SUDOERS_FILE))}"
+            f"/usr/bin/install -m 0440 -o root -g wheel {shlex.quote(tmp_path)} {shlex.quote(str(SUDOERS_FILE))} && "
+            f"rm -f {shlex.quote(str(_LEGACY_SUDOERS_FILE))}"
         )
         as_escaped = shell_cmd.replace("\\", "\\\\").replace('"', '\\"')
         prompt = (
-            "NetBird Route Fix needs one-time permission to switch macOS "
+            "MN-routes needs one-time permission to switch macOS "
             "routes automatically, without asking for your password every time."
         )
         script = f'do shell script "{as_escaped}" with prompt "{prompt}" with administrator privileges'

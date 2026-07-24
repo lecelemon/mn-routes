@@ -10,14 +10,14 @@
 
 set -euo pipefail
 
-SUDOERS_FILE="/etc/sudoers.d/netbird-route-fix"
+SUDOERS_FILE="/etc/sudoers.d/mn-routes"
 CURRENT_USER="$(whoami)"
 
 TMP_FILE="$(mktemp)"
 trap 'rm -f "$TMP_FILE"' EXIT
 
 cat > "$TMP_FILE" <<EOF
-# Managed by netbird-route-fix — do not edit by hand.
+# Managed by mn-routes — do not edit by hand.
 # Regenerate via the app's automatic setup, or this script.
 ${CURRENT_USER} ALL=(root) NOPASSWD: /sbin/route
 EOF
