@@ -1,12 +1,16 @@
 #!/bin/bash
-# Installs dependencies and (optionally) sets up NetBird Route Fix to
-# start automatically at login via a LaunchAgent.
+# Builds MN Route as a real .app bundle (proper name/icon instead of a
+# generic Python process), installs it to ~/Applications, and optionally
+# sets it up to start automatically at login via a LaunchAgent.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLIST_LABEL="com.netbirdroutefix.app"
+APP_NAME="MN Route"
+PLIST_LABEL="com.mnroute.app"
 PLIST_PATH="$HOME/Library/LaunchAgents/${PLIST_LABEL}.plist"
+INSTALL_DIR="$HOME/Applications"
+APP_PATH="$INSTALL_DIR/${APP_NAME}.app"
 PYTHON_BIN="$(command -v python3)"
 
 if [ -z "$PYTHON_BIN" ]; then
@@ -18,11 +22,29 @@ echo "Installing Python dependencies for $PYTHON_BIN..."
 "$PYTHON_BIN" -m pip install --user -r "$SCRIPT_DIR/requirements.txt"
 
 echo
+echo "Building ${APP_NAME}.app..."
+rm -rf "$SCRIPT_DIR/build" "$SCRIPT_DIR/dist"
+BUILD_LOG="$(mktemp)"
+if ! (cd "$SCRIPT_DIR" && "$PYTHON_BIN" setup.py py2app) > "$BUILD_LOG" 2>&1; then
+    echo "Build failed. Full log:" >&2
+    cat "$BUILD_LOG" >&2
+    rm -f "$BUILD_LOG"
+    exit 1
+fi
+rm -f "$BUILD_LOG"
+
+mkdir -p "$INSTALL_DIR"
+rm -rf "$APP_PATH"
+cp -R "$SCRIPT_DIR/dist/${APP_NAME}.app" "$APP_PATH"
+rm -rf "$SCRIPT_DIR/build" "$SCRIPT_DIR/dist"
+echo "Installed to $APP_PATH"
+
+echo
 read -r -p "Start automatically at login via a LaunchAgent? [Y/n] " REPLY
 case "$REPLY" in
     [Nn]*)
-        echo "Skipping autostart. Run it manually any time with:"
-        echo "  $PYTHON_BIN $SCRIPT_DIR/menubar_app.py"
+        echo "Skipping autostart. Launch it manually any time with:"
+        echo "  open \"$APP_PATH\""
         ;;
     *)
         mkdir -p "$HOME/Library/LaunchAgents"
@@ -35,22 +57,33 @@ case "$REPLY" in
     <string>${PLIST_LABEL}</string>
     <key>ProgramArguments</key>
     <array>
-        <string>${PYTHON_BIN}</string>
-        <string>${SCRIPT_DIR}/menubar_app.py</string>
+        <string>${APP_PATH}/Contents/MacOS/${APP_NAME}</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/netbird-route-fix.out.log</string>
+    <string>/tmp/mn-route.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/netbird-route-fix.err.log</string>
+    <string>/tmp/mn-route.err.log</string>
 </dict>
 </plist>
 PLIST
         launchctl bootout "gui/$(id -u)/${PLIST_LABEL}" 2>/dev/null || true
-        launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH"
+        # A freshly-copied .app can briefly fail bootstrap while macOS
+        # settles its first-launch checks; retry a few times.
+        for attempt in 1 2 3; do
+            if launchctl bootstrap "gui/$(id -u)" "$PLIST_PATH" 2>/dev/null; then
+                break
+            fi
+            if [ "$attempt" = 3 ]; then
+                echo "launchctl bootstrap failed after 3 attempts — try running this line manually:" >&2
+                echo "  launchctl bootstrap gui/\$(id -u) \"$PLIST_PATH\"" >&2
+                exit 1
+            fi
+            sleep 2
+        done
         echo "Installed and started — it will now launch automatically at every login."
         echo "Manage it later with:"
         echo "  launchctl bootout gui/\$(id -u)/${PLIST_LABEL}"
