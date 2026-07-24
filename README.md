@@ -13,10 +13,15 @@ Supports any number of subnets, each switched independently.
 
 - macOS with a Mac menu bar (uses `NSStatusItem` via [rumps](https://github.com/jaredks/rumps))
 - Python 3
-- [NetBird](https://netbird.io) installed and connected
-- **Verified working on:** macOS 26.5.2, Apple M5 (MacBook Air). Other
-  Apple Silicon Macs and recent macOS versions are likely fine too, but
-  untested.
+- A VPN client that installs its routes on a `utun` interface (standard
+  for WireGuard-based clients)
+- **Verified working on:** macOS 26.5.2, Apple M5 (MacBook Air), with
+  [NetBird](https://netbird.io). Other Apple Silicon Macs and recent
+  macOS versions are likely fine too, but untested. It should also work
+  with any other VPN client built on WireGuard/`utun` interfaces (e.g.
+  Tailscale, plain WireGuard) since the switching logic only looks at
+  the OS routing table and interface names, not anything NetBird-specific
+  — but that combination hasn't actually been tested.
 
 ## Install
 
