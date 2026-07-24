@@ -35,15 +35,12 @@ chmod +x install.sh
 ./install.sh
 ```
 
-`install.sh` builds a real `MN-routes.app`, installs it to `~/Applications`,
+`install.sh` builds `MN-routes.app`, installs it to `~/Applications`,
 and optionally sets up a LaunchAgent so it starts automatically at login.
-Building it locally (via [py2app](https://py2app.readthedocs.io/)) is what
-gives it a proper name/icon in Activity Monitor, alerts, and the menu bar,
-instead of showing up as a generic Python process.
 
 The first time it runs without passwordless `sudo` already configured for
 `/sbin/route`, it shows a native macOS admin-password prompt (once) to set
-that up — needed so the app can switch routes without asking for your
+that up — needed so the app can switch routes without asking for yours
 password every time.
 
 ## Configure
