@@ -1,0 +1,12 @@
+{
+  "poll_interval_seconds": 10,
+  "probe_timeout_seconds": 1,
+  "routes": [
+    {
+      "name": "Office VLAN",
+      "subnet": "10.0.10.0/24",
+      "probe_ip": "10.0.10.254",
+      "tcp_probes": []
+    }
+  ]
+}
