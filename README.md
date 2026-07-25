@@ -92,3 +92,7 @@ Menu bar icons: 🟢 direct · 🔒 VPN · 🚫 no route installed · ⚠️ err
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Credits
+
+Built using [Claude Code](https://claude.com/claude-code) (Claude Sonnet 5).
