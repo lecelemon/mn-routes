@@ -105,9 +105,15 @@ def save_state(state):
     STATE_PATH.write_text(json.dumps(state, indent=2))
 
 
+VALID_MODES = ("auto", "direct", "vpn")
+
+
 def get_route_state(state, subnet):
     """Per-subnet state (mode, learned VPN tunnel interface), migrating
-    older on-disk shapes in place if found."""
+    older on-disk shapes in place if found. state.json is user-editable,
+    so a missing/invalid mode (typo, hand edit, old format) is reset to
+    "auto" rather than left to crash callers that trust it's always one
+    of VALID_MODES."""
     routes = state.setdefault("routes", {})
     if subnet not in routes and ("mode" in state or "netbird_iface" in state or "vpn_iface" in state):
         routes[subnet] = {
@@ -117,6 +123,8 @@ def get_route_state(state, subnet):
     route = routes.setdefault(subnet, {"mode": "auto", "vpn_iface": None})
     if "vpn_iface" not in route:
         route["vpn_iface"] = route.pop("netbird_iface", None)
+    if route.get("mode") not in VALID_MODES:
+        route["mode"] = "auto"
     return route
 
 
